@@ -37,6 +37,7 @@ def setupContent(conn, c, rownr):
     with open('csvfiles.txt','r') as f:
         content = f.readlines()
     for cont in content:
+        if cont  is '\n' or None: continue 
         count = 0
         cont = cont.strip('\n');
         if cont == 'nation.csv':
@@ -101,9 +102,29 @@ def setupContent(conn, c, rownr):
                     count+=1
         else:
             print ("The csv file name " + cont + " is not recognized.")
-
-    #c.execute("SELECT * FROM NATION")
+    '''
+    q = "SELECT * FROM PARTSUPP WHERE PS_SUPPLYCOST > 500;"
+    c.execute(q)
     print(c.fetchall())
+    ''' 
+
+    while True:
+        with open('workload.sql') as queries:
+            schema = queries.read()
+            queries.close()
+        #The multiple SQL commands split at ';' and executed separately
+        count = 0;
+        sqlqueries = schema.split(';')
+        for query in sqlqueries:
+            if query is '\n': continue
+            count+=1
+            try:
+                c.execute(query)
+                print("The result of the " + str(count) + " query:")	
+                print(c.fetchall())
+            except sqlite3.OperationalError as e:
+                print("Query number " + str(count) + ":" + '"' + query + '"' +  " not executed:", e)
+
     conn.commit()
     conn.close()
     f.close()
